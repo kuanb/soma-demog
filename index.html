@@ -11,6 +11,10 @@
 		margin-left: auto;
 		margin-right: auto;
 	}
+	.leaflet-popup-content {
+		max-height: 200px;
+		overflow: scroll;
+	}
 </style>
 
 <body>
@@ -38,19 +42,7 @@
 
 <script type="text/javascript">
 // Globals
-var clean00, clean10, map, sfblocks;
-
-// Anon function finds matching files between both Census options (00 and 10)
-(function () {
-	$.get('http://api.census.gov/data/2000/sf1/variables')
-	.then(function (resp) {
-		clean00 = resp.slice(4);
-		return $.get('http://api.census.gov/data/2010/sf1/variables');
-	}).then(function (resp) {
-		clean10 = resp.slice(4);
-		
-	});
-}); // do not execute...
+var map, sfblocks;
 
 // Draw Leaflet map
 map = L.map('map').setView([37.778922, -122.406023], 13);
@@ -68,20 +60,21 @@ $.get('sfBlockGroups.geojson')
 			sfblocks = JSON.parse(resp);
 
 			sfblocks.features.forEach(function (ea) {
-				var stringified = '';
+				var stringified = '<table style="width:100%">';
 
 				var props = ea.properties;
 				for (prop in props) {
 					// Add to the string version of pop up
-					stringified += prop + ': ' + props[prop] + '<br>';
+					stringified += '<tr><td>' + prop + '</td><td>' + props[prop] + '</td></tr>';
 					// Modify type to number if ok
 					if (!isNaN(props[prop])) {
-						props[prop] = Number(props[prop]);
+						ea.properties[prop] = Number(props[prop]);
 					}
 				}
-				
+
+				stringified += '</table>';
 				// save string version in properties
-				ea.properties['stringified'] = stringified;
+				ea.properties.stringified = stringified;
 
 				// bind pop up
 				L.geoJSON(ea, {
