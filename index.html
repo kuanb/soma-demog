@@ -59,7 +59,16 @@ $.get('./sfBlockGroups.json')
 
 		if (resp) {
 			resp.features.forEach(function (ea) {
-				var stringified = '<table style="width:100%">';
+				var stringified = '<table style="width:100%"><tr><td>Var Name</td><td>Val</td></tr>';
+
+				// tabulate the total population first for each
+				var totPopVal = 0;
+				var totalPop = ['age_18_21', 'age_22_29', 'age_30_39', 'age_40_49', 'age_50_64', 'age_5_17', 'age_65_up', 'age_under5'].map(function (ageGroup) {
+					if (!isNaN(ea.properties[ageGroup])) {
+						totPopVal += Number(ea.properties[ageGroup]);
+					}
+				});
+				stringified += '<tr><td>tot_pop</td><td>' + totPopVal + '</td></tr>';
 
 				var props = ea.properties;
 				Object.keys(ea.properties).sort().forEach(function (prop) {
