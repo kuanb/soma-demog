@@ -54,11 +54,10 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
 }).addTo(map);
 
 // Load in Census block data
-$.get('sfBlockGroups.geojson')
-	.then(function (resp) {
-		if (resp) {
-			sfblocks = JSON.parse(resp);
+$.get('./sfBlockGroups.json')
+	.then(function (sfblocks) {
 
+		if (sfblocks) {
 			sfblocks.features.forEach(function (ea) {
 				var stringified = '<table style="width:100%">';
 
