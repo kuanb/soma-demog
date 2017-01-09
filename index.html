@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>SOMA Analysis</title>
+</head>
+
+<style>
+	#map {
+		width: 100%;
+		height: 600px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+</style>
+
+<body>
+
+<h1>Information About SoMa Neighborhood</h1>
+
+<p>
+	Various reference data:
+	CA State FIP: 06
+	San Francisco County FIP: 075
+</p>
+
+<div id='map'></div>
+
+</body>
+
+<!-- Required -->
+<script
+  src="https://code.jquery.com/jquery-1.12.4.min.js"
+  integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="
+  crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+
+<script type="text/javascript">
+// Globals
+var clean00, clean10, map, sfblocks;
+
+// Anon function finds matching files between both Census options (00 and 10)
+(function () {
+	$.get('http://api.census.gov/data/2000/sf1/variables')
+	.then(function (resp) {
+		clean00 = resp.slice(4);
+		return $.get('http://api.census.gov/data/2010/sf1/variables');
+	}).then(function (resp) {
+		clean10 = resp.slice(4);
+		
+	});
+}); // do not execute...
+
+// Draw Leaflet map
+map = L.map('map').setView([37.778922, -122.406023], 13);
+L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
+	maxZoom: 18,
+	attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+		'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+	id: 'mapbox.light'
+}).addTo(map);
+
+// Load in Census block data
+$.get('sfBlockGroups.geojson')
+	.then(function (resp) {
+		if (resp) {
+			sfblocks = JSON.parse(resp);
+
+			sfblocks.features.forEach(function (ea) {
+				var stringified = '';
+
+				var props = ea.properties;
+				for (prop in props) {
+					// Add to the string version of pop up
+					stringified += prop + ': ' + props[prop] + '<br>';
+					// Modify type to number if ok
+					if (!isNaN(props[prop])) {
+						props[prop] = Number(props[prop]);
+					}
+				}
+				
+				// save string version in properties
+				ea.properties['stringified'] = stringified;
+
+				// bind pop up
+				L.geoJSON(ea, {
+					onEachFeature: function (feature, layer) {
+						layer.bindPopup(stringified);
+					},
+				}).addTo(map);
+
+				console.log(ea)
+			});
+		}
+	});
+
+
+</script>
+</html>
