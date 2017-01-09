@@ -42,7 +42,7 @@
 
 <script type="text/javascript">
 // Globals
-var map, sfblocks;
+var map, sfblocks = [];
 
 // Draw Leaflet map
 map = L.map('map').setView([37.778922, -122.406023], 13);
@@ -55,35 +55,39 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
 
 // Load in Census block data
 $.get('./sfBlockGroups.json')
-	.then(function (sfblocks) {
+	.then(function (resp) {
 
-		if (sfblocks) {
-			sfblocks.features.forEach(function (ea) {
+		if (resp) {
+			resp.features.forEach(function (ea) {
 				var stringified = '<table style="width:100%">';
 
 				var props = ea.properties;
-				for (prop in props) {
+				Object.keys(ea.properties).sort().forEach(function (prop) {
 					// Add to the string version of pop up
 					stringified += '<tr><td>' + prop + '</td><td>' + props[prop] + '</td></tr>';
 					// Modify type to number if ok
 					if (!isNaN(props[prop])) {
 						ea.properties[prop] = Number(props[prop]);
 					}
-				}
+				});
 
 				stringified += '</table>';
 				// save string version in properties
 				ea.properties.stringified = stringified;
 
 				// bind pop up
-				L.geoJSON(ea, {
+				var newBlock = L.geoJSON(ea, {
 					onEachFeature: function (feature, layer) {
 						layer.bindPopup(stringified);
 					},
-				}).addTo(map);
+				});
 
-				console.log(ea)
+				sfblocks.push(newBlock);
 			});
+
+			sfblocks = L.featureGroup(sfblocks);
+			console.log(sfblocks)
+			sfblocks.addTo(map);
 		}
 	});
 
